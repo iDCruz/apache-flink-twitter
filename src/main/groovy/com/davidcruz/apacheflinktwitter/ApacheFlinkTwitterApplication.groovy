@@ -26,11 +26,11 @@ class ApacheFlinkTwitterApplication {
         log.info("Pre-Transform")
         log.info(ds.collect().join(","))
 
-        log.info("Post-Transform: Filter")
-        log.info(SampleFilter(ds).join(","))
-
-        log.info("Post-Transform: Map")
-        log.info(SampleMap(ds).join(","))
+//        log.info("Post-Transform: Filter")
+//        log.info(SampleFilter(ds).join(","))
+//
+//        log.info("Post-Transform: Map")
+//        log.info(SampleMap(ds).join(","))
 
     }
 
