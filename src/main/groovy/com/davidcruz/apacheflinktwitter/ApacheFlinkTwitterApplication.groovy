@@ -1,14 +1,26 @@
 package com.davidcruz.apacheflinktwitter
 
+import com.davidcruz.apacheflinktwitter.model.MapToTweet
+import com.davidcruz.apacheflinktwitter.model.MapTweetToInfluxDbPoint
+import com.davidcruz.apacheflinktwitter.model.TweetFilter
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.util.logging.Slf4j
 import org.apache.flink.api.common.functions.FilterFunction
 import org.apache.flink.api.common.functions.MapFunction
-import org.apache.flink.api.java.DataSet
-import org.apache.flink.api.java.ExecutionEnvironment
+import org.apache.flink.api.common.functions.ReduceFunction
+import org.apache.flink.streaming.api.datastream.DataStream
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
+import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows
+import org.apache.flink.streaming.api.windowing.time.Time
+import org.apache.flink.streaming.connectors.twitter.TwitterSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 
 import javax.annotation.PostConstruct
+import java.util.concurrent.TimeUnit
 
 @Slf4j
 @SpringBootApplication
@@ -18,45 +30,24 @@ class ApacheFlinkTwitterApplication {
         SpringApplication.run ApacheFlinkTwitterApplication, args
     }
 
+    @Autowired
+    TwitterSource twitterSource
+
     @PostConstruct
-    static void start() {
-        ExecutionEnvironment env = FlinkExecutionEnvironment()
-        DataSet<Integer> ds = env.fromElements(1, 2, 3, 4, 5, 6)
+    void init() {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment()
+        DataStream<String> stream = env.addSource(twitterSource)
+//        stream.filter(new TweetFilter())
+//                .print()
 
-        log.info("Pre-Transform")
-        log.info(ds.collect().join(","))
+        stream.filter(new TweetFilter())
+            .map(new MapToTweet())
+            .keyBy("source")
+            .timeWindow(Time.seconds(10))
+            .sum("num")
+            .map(new MapTweetToInfluxDbPoint())
+            .addSink(new InfluxDbSink())
 
-//        log.info("Post-Transform: Filter")
-//        log.info(SampleFilter(ds).join(","))
-//
-//        log.info("Post-Transform: Map")
-//        log.info(SampleMap(ds).join(","))
-
-    }
-
-    static List SampleMap(DataSet<Integer> ds){
-        List<Integer> list = ds.map(new MapFunction<Integer, Object>() {
-            @Override
-            Object map(Integer value) throws Exception {
-                return value.doubleValue()
-            }
-        }).collect()
-
-        list
-    }
-
-    static List SampleFilter(DataSet<Integer> ds){
-        List<Integer> list = ds.filter(new FilterFunction<Integer>() {
-            @Override
-            boolean filter(Integer value) throws Exception {
-                return value.intValue() == 2
-            }
-        }).collect()
-
-        list
-    }
-
-    static ExecutionEnvironment FlinkExecutionEnvironment() {
-        ExecutionEnvironment.getExecutionEnvironment()
+        env.execute()
     }
 }

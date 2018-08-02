@@ -132,3 +132,49 @@ class Movie {
     String name
     Set<String> genres
 }
+
+
+
+
+
+//void init(){
+
+//        ExecutionEnvironment env = FlinkExecutionEnvironment()
+//        DataSet<Integer> ds = env.fromElements(1, 2, 3, 4, 5, 6)
+//
+//        log.info("Pre-Transform")
+//        log.info(ds.collect().join(","))
+
+//        log.info("Post-Transform: Filter")
+//        log.info(SampleFilter(ds).join(","))
+//
+//        log.info("Post-Transform: Map")
+//        log.info(SampleMap(ds).join(","))
+//}
+
+//
+//static List SampleMap(DataSet<Integer> ds){
+//    List<Integer> list = ds.map(new MapFunction<Integer, Object>() {
+//        @Override
+//        Object map(Integer value) throws Exception {
+//            return value.doubleValue()
+//        }
+//    }).collect()
+//
+//    list
+//}
+//
+//static List SampleFilter(DataSet<Integer> ds){
+//    List<Integer> list = ds.filter(new FilterFunction<Integer>() {
+//        @Override
+//        boolean filter(Integer value) throws Exception {
+//            return value.intValue() == 2
+//        }
+//    }).collect()
+//
+//    list
+//}
+//
+//static ExecutionEnvironment FlinkExecutionEnvironment() {
+//    ExecutionEnvironment.getExecutionEnvironment()
+//}
